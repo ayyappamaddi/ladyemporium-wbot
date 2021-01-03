@@ -19,7 +19,7 @@ WAPI.waitNewMessages(false, async (data) => {
         body.orderDate = new Date();
 
         if (message.type === "chat" && body.user) {
-            const webhookUrl = intents.appconfig.webhook['local'];
+            const webhookUrl = intents.appconfig.webhook.prod;
 
             fetch(webhookUrl, {
                 method: "POST",
