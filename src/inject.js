@@ -30,16 +30,16 @@ WAPI.waitNewMessages(false, async (data) => {
             }).then((resp) => resp.json()).then(function (response) {
 
                 if (response && response.orderId) {
-                    WAPI.sendMessage2(message.chatId._serialized, 'Order has been created, orderId: ' + response.orderId);
+                    WAPI.sendMessage2(message.chatId._serialized, 'Order has been created, orderId: ' + response.orderId+ ' for :'+ response.shippingAddress);
                     if (userDetails.senMesges) {
                         sendConfirmationMsg(response, userDetails.msgTemplate);
                     }
                 } else {
-                    WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong, Apologies for inconvinience \n' + message.body);
+                    WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong, Apologies for inconvinience \n' + message.body, 'Quoted text');
                 }
 
             }).catch(function (error) {
-                WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong, Apologies for inconvinience \n' + message.body);
+                WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong, Apologies for inconvinience \n' + message.body, 'Quoted text');
             });
         }
 

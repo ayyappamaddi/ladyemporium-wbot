@@ -4,7 +4,7 @@
         "isGroupReply":true,
         "webhook":{
             "local":"http://localhost:3001/v1/orders",
-            "prod":"http://52.208.209.4:443/v1/orders"
+            "prod":"https://api.ladyemporium.in/v1/orders"
         }
     },
     "bot": [{
@@ -80,7 +80,7 @@
     "users":{
         "919663923281-1609648393@g.us":{
             "name": "ayyappa",
-            "senMesges":true,
+            "senMesges":false,
             "msgTemplate":"👏 Your saree been confired, Order No: *****ORDER_NO****** \n ****BODY***** \n 🙏🙏This is auto generated msg \n Please donot reply"
         }
     }
