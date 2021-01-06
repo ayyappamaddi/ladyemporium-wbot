@@ -39,6 +39,7 @@ WAPI.waitNewMessages(false, async (data) => {
                 }
 
             }).catch(function (error) {
+                window.log(`Error===>${error.stack}`);
                 WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong, Apologies for inconvinience \n' + message.body, 'Quoted text');
             });
         }
