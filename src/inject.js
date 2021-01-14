@@ -13,13 +13,14 @@ WAPI.waitNewMessages(false, async (data) => {
         body = {};
         body.shippingAddress = message.body;
         body.msgIds = [message.id];
+        window.log(`Chat id===>${message.chatId}`);
         const userDetails = intents.users[message.chatId._serialized];
         body.user = userDetails ? userDetails.name : '';
         body.orderStatus = 'confirmed'
         body.orderDate = new Date();
 
         if (message.type === "chat" && body.user) {
-            const webhookUrl = intents.appconfig.webhook.prod;
+            const webhookUrl = intents.appconfig.webhook.local;
 
             fetch(webhookUrl, {
                 method: "POST",

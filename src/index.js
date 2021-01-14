@@ -11,6 +11,7 @@ var rev = require("./detectRev");
 var constants = require("./constants");
 var configs = require("../bot");
 var settings = require('./settings');
+// const rabbitmq = require("./rabbitmq");
 var fs = require("fs");
 
 //console.log(ps);
@@ -30,6 +31,11 @@ async function Main() {
         if (configs.smartreply.suggestions.length > 0) {
             await setupSmartReply();
         }
+        global.page = page;
+        // await rabbitmq.subscribeToRabbitmq();
+        page.on('dialog', async dialog => {
+            await dialog.accept();
+        });
         console.log("WBOT is ready !! Let those message come.");
     } catch (e) {
         console.error("\nLooks like you got an error. " + e);
@@ -116,7 +122,7 @@ async function Main() {
 
             // Register a filesystem watcher
             fs.watch(constants.BOT_SETTINGS_FILE, (event, filename) => {
-                setTimeout(()=> {
+                setTimeout(() => {
                     settings.LoadBotSettings(event, filename, page);
                 }, timeout);
             });
@@ -198,15 +204,15 @@ async function Main() {
         `);
         spinner.stop("setting up smart reply ... done!");
         // page.waitForSelector("#main", { timeout: 0 }).then(async () => {
-            // await page.exposeFunction("sendMessage", async message => {
-            //     return new Promise(async (resolve, reject) => {
-            //         //send message to the currently open chat using power of puppeteer 
-            //         await page.type("#main div.selectable-text[data-tab]", message);
-            //         if (configs.smartreply.clicktosend) {
-            //             await page.click("#main > footer > div.copyable-area > div:nth-child(3) > button");
-            //         }
-            //     });
-            // });
+        // await page.exposeFunction("sendMessage", async message => {
+        //     return new Promise(async (resolve, reject) => {
+        //         //send message to the currently open chat using power of puppeteer 
+        //         await page.type("#main div.selectable-text[data-tab]", message);
+        //         if (configs.smartreply.clicktosend) {
+        //             await page.click("#main > footer > div.copyable-area > div:nth-child(3) > button");
+        //         }
+        //     });
+        // });
         // });
     }
 }
