@@ -16,12 +16,16 @@ WAPI.waitNewMessages(false, async (data) => {
         window.log(`Chat id===>${message.chatId}`);
         const userDetails = intents.users[message.chatId._serialized];
         body.user = userDetails ? userDetails.name : '';
-        body.orderStatus = 'confirmed'
-        body.orderDate = new Date();
+        try {
+            body.userPhone = (message.chatId + "").substr(2, 10);
+            body.orderStatus = 'confirmed'
+            body.orderDate = new Date();
+        } catch (e) {
+            window.log(`error==>${e.stack}`);
+        }
 
-        if (message.type === "chat" && body.user) {
-            const webhookUrl = intents.appconfig.webhook.prod;
-
+        if (body.userPhone) {
+            const webhookUrl = intents.appconfig.webhook.local;
             fetch(webhookUrl, {
                 method: "POST",
                 body: JSON.stringify(body),
@@ -31,17 +35,18 @@ WAPI.waitNewMessages(false, async (data) => {
             }).then((resp) => resp.json()).then(function (response) {
 
                 if (response && response.orderId) {
-                    WAPI.sendMessage2(message.chatId._serialized, 'Order has been created, orderId: ' + response.orderId+ ' for :'+ response.shippingAddress);
+                    WAPI.sendMessage2(message.chatId._serialized, 'Order has been created, orderId: ' + response.orderId + ' for :' + response.shippingAddress);
                     if (userDetails.senMesges) {
                         sendConfirmationMsg(response, userDetails.msgTemplate);
                     }
                 } else {
-                    WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong, Apologies for inconvinience \n' + message.body, 'Quoted text');
+                    WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong While crating order, Apologies for inconvinience \n' + message.body, 'Quoted text');
                 }
 
             }).catch(function (error) {
                 window.log(`Error===>${error.stack}`);
                 WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong, Apologies for inconvinience \n' + message.body, 'Quoted text');
+                WAPI.sendMessage2('919663923281@c.us', JSON.stringify(error));
             });
         }
 
