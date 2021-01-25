@@ -25,7 +25,7 @@ WAPI.waitNewMessages(false, async (data) => {
         }
 
         if (body.userPhone) {
-            const webhookUrl = intents.appconfig.webhook.local;
+            const webhookUrl = intents.appconfig.webhook.prod;
             fetch(webhookUrl, {
                 method: "POST",
                 body: JSON.stringify(body),
@@ -36,9 +36,9 @@ WAPI.waitNewMessages(false, async (data) => {
 
                 if (response && response.orderId) {
                     WAPI.sendMessage2(message.chatId._serialized, 'Order has been created, orderId: ' + response.orderId + ' for :' + response.shippingAddress);
-                    if (userDetails.senMesges) {
-                        sendConfirmationMsg(response, userDetails.msgTemplate);
-                    }
+                    // if (userDetails.sendMesges) {
+                    //     sendConfirmationMsg(response, userDetails.msgTemplate);
+                    // }
                 } else {
                     WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong While crating order, Apologies for inconvinience \n' + message.body, 'Quoted text');
                 }
@@ -46,7 +46,6 @@ WAPI.waitNewMessages(false, async (data) => {
             }).catch(function (error) {
                 window.log(`Error===>${error.stack}`);
                 WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong, Apologies for inconvinience \n' + message.body, 'Quoted text');
-                WAPI.sendMessage2('919663923281@c.us', JSON.stringify(error));
             });
         }
 
