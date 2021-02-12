@@ -1,8 +1,47 @@
+const msgList = [];
+let queueAvlStatus = true;
 function sendConfirmationMsg(order, template) {
     let msgBody = template.replace('*****ORDER_NO******', order.orderId);
     msgBody = msgBody.replace('****BODY*****', order.shippingAddress);
     for (let i = 0; i < order.phoneNumbers.length; i++) {
         WAPI.sendMessage2('91' + order.phoneNumbers[i] + '@c.us', msgBody);
+    }
+}
+function sendNextMsg() {
+    if (msgList.length) {
+        sendData(msgList.shift());
+    }else{
+        queueAvlStatus = true;
+    }
+}
+function sendData(msg) {
+    const webhookUrl = intents.appconfig.webhook.prod;
+    fetch(webhookUrl, {
+        method: "POST",
+        body: JSON.stringify(msg.body),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then((resp) => resp.json()).then(function (response) {
+        sendNextMsg();
+        if (response && response.orderId) {
+            WAPI.sendMessage2(msg.chatId._serialized, 'Order has been created, orderId: ' + response.orderId + ' for :' + response.shippingAddress);
+        } else {
+            WAPI.sendMessage2(msg.chatId._serialized, 'It looks soemthing went wrong While crating order, Apologies for inconvinience \n' + message.body, 'Quoted text');
+        }
+
+    }).catch(function (error) {
+        sendNextMsg();
+        window.log(`Error===>${error.stack}`);
+        WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong, Apologies for inconvinience \n' + message.body, 'Quoted text');
+    });
+}
+function pushMsg(msg) {
+    if (msgList.length === 0 && queueAvlStatus) {
+        queueAvlStatus = false
+        sendData(msg);
+    } else {
+        msgList.push(msg);
     }
 }
 // data = WAPI.getAllChatsWithNewMsg();
@@ -25,28 +64,7 @@ WAPI.waitNewMessages(false, async (data) => {
         }
 
         if (body.userPhone) {
-            const webhookUrl = intents.appconfig.webhook.prod;
-            fetch(webhookUrl, {
-                method: "POST",
-                body: JSON.stringify(body),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }).then((resp) => resp.json()).then(function (response) {
-
-                if (response && response.orderId) {
-                    WAPI.sendMessage2(message.chatId._serialized, 'Order has been created, orderId: ' + response.orderId + ' for :' + response.shippingAddress);
-                    // if (userDetails.sendMesges) {
-                    //     sendConfirmationMsg(response, userDetails.msgTemplate);
-                    // }
-                } else {
-                    WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong While crating order, Apologies for inconvinience \n' + message.body, 'Quoted text');
-                }
-
-            }).catch(function (error) {
-                window.log(`Error===>${error.stack}`);
-                WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong, Apologies for inconvinience \n' + message.body, 'Quoted text');
-            });
+            pushMsg({ body, chatId: message.chatId });
         }
 
 
