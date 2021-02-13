@@ -33,7 +33,7 @@ function sendData(msg) {
     }).catch(function (error) {
         sendNextMsg();
         window.log(`Error===>${error.stack}`);
-        WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong, Apologies for inconvinience \n' + msg.body, 'Quoted text');
+        WAPI.sendMessage2(msg.chatId._serialized, 'It looks soemthing went wrong, Apologies for inconvinience \n' + msg.body);
     });
 }
 function pushMsg(msg) {
