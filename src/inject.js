@@ -32,7 +32,7 @@ function sendData(msg) {
 
     }).catch(function (error) {
         window.log(`Error===>${error.stack}`);
-        WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong, Apologies for inconvinience \n' + message.body, 'Quoted text');
+        WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong, Apologies for inconvinience \n' + message.body);
         sendNextMsg();
     });
 }
