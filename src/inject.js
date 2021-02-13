@@ -26,14 +26,14 @@ function sendData(msg) {
         if (response && response.orderId) {
             WAPI.sendMessage2(msg.chatId._serialized, 'Order has been created, orderId: ' + response.orderId + ' for :' + response.shippingAddress);
         } else {
-            WAPI.sendMessage2(msg.chatId._serialized, 'It looks soemthing went wrong While crating order, Apologies for inconvinience \n' + message.body, 'Quoted text');
+            WAPI.sendMessage2(msg.chatId._serialized, 'It looks soemthing went wrong While crating order, Apologies for inconvinience \n' + msg.body, 'Quoted text');
         }
         sendNextMsg();
 
     }).catch(function (error) {
-        window.log(`Error===>${error.stack}`);
-        WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong, Apologies for inconvinience \n' + message.body);
         sendNextMsg();
+        window.log(`Error===>${error.stack}`);
+        WAPI.sendMessage2(message.chatId._serialized, 'It looks soemthing went wrong, Apologies for inconvinience \n' + msg.body, 'Quoted text');
     });
 }
 function pushMsg(msg) {
