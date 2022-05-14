@@ -11,7 +11,6 @@ var rev = require("./detectRev");
 var constants = require("./constants");
 var configs = require("../bot");
 var settings = require('./settings');
-// const rabbitmq = require("./rabbitmq");
 var fs = require("fs");
 
 //console.log(ps);
@@ -24,15 +23,15 @@ async function Main() {
         //console.log(configs);
         var page;
         await downloadAndStartThings();
-        var isLogin = await checkLogin();
-        if (!isLogin) {
-            await getAndShowQR();
-        }
-        if (configs.smartreply.suggestions.length > 0) {
-            await setupSmartReply();
-        }
+        // var isLogin = await checkLogin();
+        // if (!isLogin) {
+        //     await getAn
+        //     dShowQR();
+        // }
+        // if (configs.smartreply.suggestions.length > 0) {
+        //     await setupSmartReply();
+        // }
         global.page = page;
-        // await rabbitmq.subscribeToRabbitmq();
         page.on('dialog', async dialog => {
             await dialog.accept();
         });
@@ -81,8 +80,8 @@ async function Main() {
         const browser = await puppeteer.launch({
             executablePath: revisionInfo.executablePath,
             defaultViewport: null,
-            headless: appconfig.appconfig.headless,
             userDataDir: path.join(process.cwd(), "ChromeSession"),
+            headless: appconfig.appconfig.headless,
             devtools: false,
             args: [...constants.DEFAULT_CHROMIUM_ARGS, ...pptrArgv], ...extraArguments
         });
@@ -132,89 +131,61 @@ async function Main() {
         }
     }
 
-    async function injectScripts(page) {
-        return await page.waitForSelector('[data-icon=laptop]')
-            .then(async () => {
-                var filepath = path.join(__dirname, "WAPI.js");
-                await page.addScriptTag({ path: require.resolve(filepath) });
-                filepath = path.join(__dirname, "inject.js");
-                await page.addScriptTag({ path: require.resolve(filepath) });
-                return true;
-            })
-            .catch(() => {
-                console.log("User is not logged in. Waited 30 seconds.");
-                return false;
-            })
-    }
 
-    async function checkLogin() {
-        spinner.start("Page is loading");
-        //TODO: avoid using delay and make it in a way that it would react to the event. 
-        await utils.delay(10000);
-        //console.log("loaded");
-        var output = await page.evaluate("localStorage['last-wid']");
-        //console.log("\n" + output);
-        if (output) {
-            spinner.stop("Looks like you are already logged in");
-            await injectScripts(page);
-        } else {
-            spinner.info("You are not logged in. Please scan the QR below");
-        }
-        return output;
-    }
+}
 
-    //TODO: add logic to refresh QR.
-    async function getAndShowQR() {
-        //TODO: avoid using delay and make it in a way that it would react to the event. 
-        //await utils.delay(10000);
+async function injectScripts(page) {
+    return await page.waitForSelector('[data-icon=laptop]')
+        .then(async () => {
+            var filepath = path.join(__dirname, "WAPI.js");
+            await page.addScriptTag({ path: require.resolve(filepath) });
+            filepath = path.join(__dirname, "inject.js");
+            await page.addScriptTag({ path: require.resolve(filepath) });
+            global.scriptsInjected = true;
+            return true;
+        })
+        .catch(() => {
+            console.log("User is not logged in. Waited 30 seconds.");
+            return false;
+        })
+}
+
+async function checkLogin() {
+
+    var output = await page.evaluate("localStorage['last-wid']");
+    //console.log("\n" + output);
+    if (output && !global.scriptsInjected) {
+        spinner.stop("Looks like you are already logged in");
+        await injectScripts(page);
+    } else if (!output) {
+        global.scriptsInjected = false;
+        spinner.info("You are not logged in. Please scan the QR below");
+    } else {
+        spinner.info("You are logged in.");
+    }
+    return output;
+}
+
+
+async function getQRcode() {
+    try{
         var scanme = "img[alt='Scan me!'], canvas";
-        await page.waitForSelector(scanme);
+        await page.goto('https://web.whatsapp.com', {
+            waitUntil: 'networkidle0',
+            timeout: 0
+        });
+        await page.waitForSelector(scanme,{timeout: 3000});
         var imageData = await page.evaluate(`document.querySelector("${scanme}").parentElement.getAttribute("data-ref")`);
-        //console.log(imageData);
-        qrcode.generate(imageData, { small: true });
-        spinner.start("Waiting for scan \nKeep in mind that it will expire after few seconds");
-        var isLoggedIn = await injectScripts(page);
-        while (!isLoggedIn) {
-            //console.log("page is loading");
-            //TODO: avoid using delay and make it in a way that it would react to the event. 
-            await utils.delay(300);
-            isLoggedIn = await injectScripts(page);
-        }
-        if (isLoggedIn) {
-            spinner.stop("Looks like you are logged in now");
-            //console.log("Welcome, WBOT is up and running");
-        }
-    }
-
-    async function setupSmartReply() {
-        spinner.start("setting up smart reply");
-        await page.waitForSelector("#app");
-        await page.evaluate(`
-            var observer = new MutationObserver((mutations) => {
-                for (var mutation of mutations) {
-                    //console.log(mutation);
-                    if (mutation.addedNodes.length && mutation.addedNodes[0].id === 'main') {
-                        //newChat(mutation.addedNodes[0].querySelector('.copyable-text span').innerText);
-                        console.log("%cChat changed !!", "font-size:x-large");
-                        WAPI.addOptions();
-                    }
-                }
-            });
-            observer.observe(document.querySelector('#app'), { attributes: false, childList: true, subtree: true });
-        `);
-        spinner.stop("setting up smart reply ... done!");
-        // page.waitForSelector("#main", { timeout: 0 }).then(async () => {
-        // await page.exposeFunction("sendMessage", async message => {
-        //     return new Promise(async (resolve, reject) => {
-        //         //send message to the currently open chat using power of puppeteer 
-        //         await page.type("#main div.selectable-text[data-tab]", message);
-        //         if (configs.smartreply.clicktosend) {
-        //             await page.click("#main > footer > div.copyable-area > div:nth-child(3) > button");
-        //         }
-        //     });
-        // });
-        // });
+        return imageData;
+    }catch(err){
+        console.log("Not able to find canvas in given time");
+        return "";
     }
 }
 
-Main();
+module.exports = {
+    initWbot: Main,
+    getQRcode,
+    checkLogin
+}
+
